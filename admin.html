@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Ideal Bliss</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/x-icon" href="https://res.cloudinary.com/djxr1flup/image/upload/v1770139106/IdealBliss_nwjfnf.png">
+    <style>
+        /* Protect content until authenticated */
+        body.locked {
+            overflow: hidden;
+        }
+        
+        /* Admin badge animation */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .admin-badge {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Table row hover effect */
+        tbody tr {
+            transition: all 0.2s ease;
+        }
+        
+        tbody tr:hover {
+            transform: translateX(4px);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 font-sans min-h-screen locked">
+
+    <!-- Authentication Modal (Appears on page load) -->
+    <div id="auth-modal" class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[999]">
+        <div class="bg-white p-10 rounded-3xl border-2 border-indigo-200 shadow-2xl max-w-md w-full mx-4">
+            <!-- Lock Icon -->
+            <div class="flex justify-center mb-6">
+                <div class="bg-indigo-100 p-4 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+            </div>
+
+            <h2 class="text-3xl font-bold mb-2 text-gray-900 text-center">Admin Access</h2>
+            <p class="text-gray-500 text-sm mb-8 text-center">Enter your credentials to continue</p>
+
+            <!-- Email Input -->
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Email Address</label>
+                <input type="email" id="admin-email" placeholder="admin@example.com" 
+                       class="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition">
+            </div>
+
+            <!-- Password Input -->
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
+                <div class="relative">
+                    <input type="password" id="admin-password" placeholder="••••••••" 
+                           class="w-full p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition pr-12">
+                    <button type="button" id="toggle-password" class="absolute right-3 top-3 text-gray-400 hover:text-indigo-600 transition">
+                        <svg id="eye-icon-closed" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div id="auth-error" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                <div class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                    <span id="auth-error-message">Invalid credentials. Please try again.</span>
+                </div>
+            </div>
+
+            <!-- Login Button -->
+            <button id="login-btn" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition transform active:scale-95 shadow-lg shadow-indigo-500/30">
+                Access Dashboard
+            </button>
+
+            <div class="mt-6 text-center">
+                <a href="index.html" class="text-sm text-gray-500 hover:text-indigo-600 transition">← Back to Site</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Content (Hidden until authenticated) -->
+    <div id="dashboard-content" class="hidden">
+        <!-- Navigation -->
+        <nav class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+            <div class="container mx-auto px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <h1 class="text-2xl font-bold text-indigo-600">Admin Dashboard</h1>
+                        <span class="admin-badge bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-bold">
+                            ADMIN
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span id="admin-user-email" class="text-sm text-gray-600 font-medium"></span>
+                        <a href="index.html" class="text-gray-600 hover:text-indigo-600 font-medium transition flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            Back to Site
+                        </a>
+                        <button id="logout-btn" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg font-semibold hover:bg-red-100 transition">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="container mx-auto mt-10 px-6 max-w-7xl pb-20">
+            <!-- Page Header -->
+            <div class="mb-8">
+                <h2 class="text-4xl font-extrabold text-gray-900 mb-2">Post Management</h2>
+                <p class="text-gray-600">Manage all blog posts, authors, and content moderation</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-gray-500 text-sm font-medium">Total Posts</p>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <h3 id="total-posts" class="text-3xl font-bold text-gray-900">0</h3>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-gray-500 text-sm font-medium">Authors</p>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                    </div>
+                    <h3 id="total-users" class="text-3xl font-bold text-gray-900">0</h3>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-gray-500 text-sm font-medium">Published</p>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 id="published-count" class="text-3xl font-bold text-gray-900">0</h3>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="text-gray-500 text-sm font-medium">In Trash</p>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </div>
+                    <h3 id="trash-count" class="text-3xl font-bold text-gray-900">0</h3>
+                </div>
+            </div>
+
+            <!-- Posts Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                    <h3 class="text-lg font-bold text-gray-900">All Posts</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Topic / Title</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Author Name</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Email Address</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-posts-table" class="bg-white divide-y divide-gray-100">
+                            <tr>
+                                <td colspan="6" class="px-6 py-16 text-center">
+                                    <div class="flex flex-col items-center">
+                                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+                                        <p class="text-gray-500 font-medium">Loading posts...</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Trash Section -->
+            <div class="mt-12">
+                <div class="flex items-center gap-3 mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <h3 class="text-2xl font-bold text-red-600">Trash Can</h3>
+                </div>
+                <div class="bg-red-50 border border-red-200 rounded-2xl p-6">
+                    <table class="w-full text-sm">
+                        <tbody id="trash-table">
+                            <tr>
+                                <td class="p-4 text-gray-500 italic text-center">Trash is empty</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Active Contributors Section -->
+            <div class="mt-12 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a7 7 0 00-7 7v1h12v-1a7 7 0 00-7-7z" />
+                    </svg>
+                    Active Contributors
+                </h3>
+                <ul id="user-list" class="divide-y divide-gray-100 max-h-64 overflow-y-auto">
+                    <li class="py-3 text-gray-500 text-sm italic">Loading contributors...</li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Initialize Supabase Client -->
+    <script>
+        const supabaseClient = supabase.createClient(
+            'https://cibsdukzkrtyeivjuzoc.supabase.co',
+            'sb_publishable_Mqw_rI4PpdxKA_j48U9RSw_gQ0Yeku1'
+        );
+    </script>
+
+    <script type="module" src="admin.js"></script>
+</body>
+</html>
